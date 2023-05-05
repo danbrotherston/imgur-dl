@@ -13,11 +13,11 @@ void main(List<String> args) async {
   var next_is_cid = false;
 
   const usageString = """
-Usage: imgur-dl [-c client_id] [-l] [-s] imgur_url\n
-  -c, --client-id    Client ID for accessing the Imgur API (can also be set with the IMGUR_CLIENT_ID environment variable)\n
-  -l, --list-only    Only list the URLs of the images instead of downloading them\n
-  -s, --show-limits  Show the remaining rate limit information\n
-  -h, --help         Print this message.\n
+Usage: imgur-dl [-c client_id] [-l] [-s] imgur_url
+  -c, --client-id    Client ID for accessing the Imgur API (can also be set with the IMGUR_CLIENT_ID environment variable)
+  -l, --list-only    Only list the URLs of the images instead of downloading them
+  -s, --show-limits  Show the remaining rate limit information
+  -h, --help         Print this message.
 """;
 
   // parse command line arguments
