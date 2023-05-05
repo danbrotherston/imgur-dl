@@ -10,11 +10,22 @@ void main(List<String> args) async {
   var listOnly = false;
   var link = '';
   var clientId = Platform.environment['IMGUR_CLIENT_ID'];
-
   var next_is_cid = false;
+
+  const usageString = """
+Usage: imgur-dl [-c client_id] [-l] [-s] imgur_url\n
+  -c, --client-id    Client ID for accessing the Imgur API (can also be set with the IMGUR_CLIENT_ID environment variable)\n
+  -l, --list-only    Only list the URLs of the images instead of downloading them\n
+  -s, --show-limits  Show the remaining rate limit information\n
+  -h, --help         Print this message.\n
+""";
 
   // parse command line arguments
   for (var arg in args) {
+    if (arg == '-h' || arg == '--help') {
+      print(usageString);
+      exit(0);
+    }
     if (arg == '-s' || arg == '--show-limits') {
       showLimits = true;
     } else if (arg == '-l' || arg == '--list') {
@@ -33,12 +44,14 @@ void main(List<String> args) async {
   if (clientId == null) {
     print(
         'Client ID not set: Please set IMGUR_CLIENT_ID environment variable or use -c|--client-id option.');
+    print(usageString);
     exit(1);
   }
 
   if (link == '') {
     print(
         'Please provide a link to an Imgur image or album as a command line argument');
+    print(usageString);
     exit(1);
   }
 

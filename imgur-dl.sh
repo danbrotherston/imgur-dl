@@ -8,6 +8,7 @@ print_usage() {
   echo "  -c, --client-id    Client ID for accessing the Imgur API (can also be set with the IMGUR_CLIENT_ID environment variable)"
   echo "  -l, --list-only    Only list the URLs of the images instead of downloading them"
   echo "  -s, --show-limits  Show the remaining rate limit information"
+  echo "  -h, --help         Print this message."
 }
 
 while [[ $# -gt 0 ]]
