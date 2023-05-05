@@ -1,17 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:path/path.dart';
+
 import 'package:http/http.dart' as http;
 
 void main(List<String> args) async {
   var showLimits = false;
   var listOnly = false;
   var link = '';
-  var clientId = Platform.environment['CLIENT_ID'];
-  if (clientId == null) {
-    print('Please set CLIENT_ID environment variable');
-    exit(1);
-  }
+  var clientId = Platform.environment['IMGUR_CLIENT_ID'];
+
+  var next_is_cid = false;
 
   // parse command line arguments
   for (var arg in args) {
@@ -19,42 +19,54 @@ void main(List<String> args) async {
       showLimits = true;
     } else if (arg == '-l' || arg == '--list') {
       listOnly = true;
+    } else if (arg == '-c' || arg == '--client-id') {
+      next_is_cid = true;
     } else {
-      link = arg;
+      if (next_is_cid) {
+        clientId = arg;
+      } else {
+        link = arg;
+      }
     }
   }
 
-  if (link == '') {
-    print('Please provide a link to an Imgur image as a command line argument');
+  if (clientId == null) {
+    print(
+        'Client ID not set: Please set IMGUR_CLIENT_ID environment variable or use -c|--client-id option.');
     exit(1);
   }
 
-  if (listOnly) {
-    var response = await http.get(Uri.parse(link));
-    var data = jsonDecode(response.body);
-    for (var image in data['data']) {
-      print(image['link']);
-    }
-    exit(0);
+  if (link == '') {
+    print(
+        'Please provide a link to an Imgur image or album as a command line argument');
+    exit(1);
   }
 
   // make API request to Imgur to get image data
-  var url = Uri.parse(link + '.json');
-  var response = await http.get(url, headers: {'Authorization': 'Client-ID $clientId'});
+  final url =
+      Uri.parse("https://api.imgur.com/3/album/${basename(link)}/images");
+  final response =
+      await http.get(url, headers: {'Authorization': 'Client-ID $clientId'});
 
   // check rate limit status
-  var clientLimit = response.headers['x-ratelimit-clientlimit'];
-  var clientRemaining = response.headers['x-ratelimit-clientremaining'];
+  final clientLimit = response.headers['x-ratelimit-clientlimit'];
+  final clientRemaining = response.headers['x-ratelimit-clientremaining'];
   if (showLimits && clientLimit != null && clientRemaining != null) {
     print('Remaining requests today: $clientRemaining / $clientLimit');
   }
 
-  // parse response and download image
-  var data = jsonDecode(response.body);
-  var imageUrl = data['data']['link'];
-  var imageName = imageUrl.split('/').last;
-  var imageResponse = await http.get(Uri.parse(imageUrl));
-  var file = File(imageName);
-  await file.writeAsBytes(imageResponse.bodyBytes);
-  print('Image saved as $imageName');
+  final imgurAlbumData = jsonDecode(response.body);
+  final imgUrls = imgurAlbumData['data'].map((x) => x['link']);
+
+  if (listOnly) {
+    print(imgUrls.join('\n'));
+  } else {
+    for (var imageUrl in imgUrls) {
+      final imageName = imageUrl.split('/').last;
+      final imageResponse = await http.get(Uri.parse(imageUrl));
+      final file = File(imageName);
+      await file.writeAsBytes(imageResponse.bodyBytes);
+      print('Image saved as $imageName');
+    }
+  }
 }
