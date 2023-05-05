@@ -56,7 +56,7 @@ body=$(echo "$response" | awk 'BEGIN {skip=1} /^\r$/ {skip=0; next} skip {next} 
 
 
 if [ "$show_limits" = true ]; then
-  limit=$(echo "$headers" | grep -i '^x-ratelimit-clientlimit:' | awk '{gsub(/\r/,""); print $2}')
+  limit=$(echo "$headers" | grep -i '^x-ratelimit-clientlimit:' | awk '{gsub(/\r/,""); print $2}')  
   remaining=$(echo "$headers" | grep -i '^x-ratelimit-clientremaining:' | awk '{gsub(/\r/,""); print $2}')
   echo "Remaining daily requests: ${remaining} of ${limit} request/day."
 fi
