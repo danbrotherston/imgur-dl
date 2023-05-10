@@ -7,8 +7,13 @@ use clap::{App, Arg};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-struct ImgurResponse {
+struct ImgurAlbumResponse {
     data: Vec<ImgurImage>,
+}
+
+#[derive(Deserialize)]
+struct ImgurImageResponse {
+    data: ImgurImage,
 }
 
 #[derive(Deserialize)]
@@ -52,10 +57,14 @@ fn main() {
         .get_matches();
 
     let image_link = matches.value_of("IMAGE_LINK").unwrap();
-    let endpoint = format!(
-        "https://api.imgur.com/3/album/{}/images",
-        image_link.split("/").last().unwrap()
-    );
+    let album = image_link.contains("/a/");
+    let hash = image_link.split("/").last().unwrap();
+
+    let endpoint = if album {
+        format!("https://api.imgur.com/3/album/{}/images", hash)
+    } else {
+        format!("https://api.imgur.com/3/image/{}", hash)
+    };
 
     let client_id = match matches.value_of("CLIENT_ID") {
         Some(id) => id.to_string(),
@@ -99,7 +108,15 @@ fn main() {
         );
     }
 
-    let imgur_response: ImgurResponse = serde_json::from_str(&response.text().unwrap()).unwrap();
+    let imgur_response: ImgurAlbumResponse = if album {
+        serde_json::from_str(&response.text().unwrap()).unwrap()
+    } else {
+        let img_response: ImgurImageResponse =
+            serde_json::from_str(&response.text().unwrap()).unwrap();
+        ImgurAlbumResponse {
+            data: vec![img_response.data],
+        }
+    };
 
     if matches.is_present("LIST") {
         for img in imgur_response.data {
